@@ -1,7 +1,15 @@
+import { type Request, type Response } from "express";
 import Job from "../models/Job.js";
 import Proposal from "../models/Proposal.js";
+import type {
+  CreateProposalBody,
+  JobIdParams,
+} from "../types/proposal.types.js";
 
-export const createProposal = async (req, res) => {
+export const createProposal = async (
+  req: Request<JobIdParams, {}, CreateProposalBody>,
+  res: Response,
+) => {
   try {
     const { coverLetter, bidAmount, deliveryDays } = req.body;
     const jobId = req.params.jobId;
@@ -23,7 +31,7 @@ export const createProposal = async (req, res) => {
 
     const proposal = await Proposal.create({
       job: jobId,
-      freelancer: req.user._id,
+      freelancer: req.user!._id,
       coverLetter,
       bidAmount,
       deliveryDays,
@@ -34,13 +42,14 @@ export const createProposal = async (req, res) => {
       message: "Proposal submitted successfully",
       data: proposal,
     });
-  } catch (error) {
+  } catch (error: any) {
     if (error.code === 11000) {
       return res.status(400).json({
         success: false,
         message: "You have already applied for this job",
       });
     }
+
     res.status(400).json({
       success: false,
       message: error.message,
@@ -48,7 +57,10 @@ export const createProposal = async (req, res) => {
   }
 };
 
-export const getJobProposals = async (req, res) => {
+export const getJobProposals = async (
+  req: Request<JobIdParams>,
+  res: Response,
+) => {
   try {
     const job = await Job.findById(req.params.jobId);
 
@@ -59,24 +71,23 @@ export const getJobProposals = async (req, res) => {
       });
     }
 
-    if (job.client.toString() !== req.user._id.toString()) {
+    if (job.client.toString() !== req.user!._id.toString()) {
       return res.status(403).json({
         success: false,
         message: "Not authorized",
       });
     }
 
-    const proposals = await Proposal.find({ job: req.params.jobId }).populate(
-      "freelancer",
-      "name email",
-    );
+    const proposals = await Proposal.find({
+      job: req.params.jobId,
+    }).populate("freelancer", "name email");
 
     res.status(200).json({
       success: true,
       count: proposals.length,
       data: proposals,
     });
-  } catch (error) {
+  } catch (error: any) {
     res.status(400).json({
       success: false,
       message: error.message,

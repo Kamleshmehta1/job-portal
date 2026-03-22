@@ -1,6 +1,11 @@
+import { type Request, type Response } from "express";
 import Job from "../models/Job.js";
+import type { CreateJobBody, JobParams } from "../types/job.types.js";
 
-export const createJob = async (req, res) => {
+export const createJob = async (
+  req: Request<{}, {}, CreateJobBody>,
+  res: Response,
+) => {
   try {
     const { title, description, skillsRequired, budget, deadline } = req.body;
 
@@ -8,9 +13,9 @@ export const createJob = async (req, res) => {
       title,
       description,
       skillsRequired,
-      budget,
+      budget: budget,
       deadline,
-      client: req.user._id,
+      client: req.user!._id,
     });
 
     res.status(201).json({
@@ -18,7 +23,7 @@ export const createJob = async (req, res) => {
       message: "Job created successfully",
       data: job,
     });
-  } catch (error) {
+  } catch (error: any) {
     res.status(400).json({
       success: false,
       message: error.message,
@@ -26,26 +31,7 @@ export const createJob = async (req, res) => {
   }
 };
 
-export const getAllJobs = async (req, res) => {
-  try {
-    const jobs = await Job.find({ status: "open" })
-      .populate("client", "name email")
-      .sort({ createdAt: -1 });
-
-    res.status(200).json({
-      success: true,
-      count: jobs.length,
-      data: jobs,
-    });
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-export const getJob = async (req, res) => {
+export const getJob = async (req: Request<JobParams>, res: Response) => {
   try {
     const job = await Job.findById(req.params.id).populate(
       "client",
@@ -63,7 +49,7 @@ export const getJob = async (req, res) => {
       success: true,
       data: job,
     });
-  } catch (error) {
+  } catch (error: any) {
     res.status(400).json({
       success: false,
       message: error.message,
@@ -71,7 +57,26 @@ export const getJob = async (req, res) => {
   }
 };
 
-export const deleteJob = async (req, res) => {
+export const getAllJobs = async (req: Request, res: Response) => {
+  try {
+    const jobs = await Job.find({ status: "open" })
+      .populate("client", "name email")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: jobs.length,
+      data: jobs,
+    });
+  } catch (error: any) {
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const deleteJob = async (req: Request<JobParams>, res: Response) => {
   try {
     const job = await Job.findById(req.params.id);
 
@@ -82,7 +87,7 @@ export const deleteJob = async (req, res) => {
       });
     }
 
-    if (job.client.toString() !== req.user._id.toString()) {
+    if (job.client.toString() !== req.user!._id.toString()) {
       return res.status(403).json({
         success: false,
         message: "Not authorized to delete this job",
@@ -95,7 +100,7 @@ export const deleteJob = async (req, res) => {
       success: true,
       message: "Job deleted successfully",
     });
-  } catch (error) {
+  } catch (error: any) {
     res.status(400).json({
       success: false,
       message: error.message,

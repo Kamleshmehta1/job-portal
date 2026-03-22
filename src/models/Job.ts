@@ -1,6 +1,23 @@
-import mongoose from "mongoose";
+import mongoose, { Document, Schema, Types } from "mongoose";
 
-const jobSchema = new mongoose.Schema(
+export interface Budget {
+  min: number;
+  max: number;
+}
+
+export interface JobDocument extends Document {
+  title: string;
+  description: string;
+  skillsRequired: string[];
+  budget: Budget;
+  deadline: Date;
+  client: Types.ObjectId;
+  status: "open" | "in-progress" | "completed" | "cancelled";
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const jobSchema = new Schema<JobDocument>(
   {
     title: {
       type: String,
@@ -11,22 +28,26 @@ const jobSchema = new mongoose.Schema(
       type: String,
       required: [true, "Description is required"],
     },
-    skillsRequired: [String],
+    skillsRequired: [{ type: String }],
+
     budget: {
       min: { type: Number, required: true },
       max: { type: Number, required: true },
     },
+
     deadline: {
       type: Date,
       required: true,
     },
+
     status: {
       type: String,
       enum: ["open", "in-progress", "completed", "cancelled"],
       default: "open",
     },
+
     client: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
@@ -34,5 +55,5 @@ const jobSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-const Job = mongoose.model("Job", jobSchema);
+const Job = mongoose.model<JobDocument>("Job", jobSchema);
 export default Job;

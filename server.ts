@@ -1,6 +1,8 @@
 import dotenv from "dotenv";
 import express from "express";
+import swaggerUi from "swagger-ui-express";
 import connectDB from "./src/config/db.js";
+import swaggerFile from "./src/config/swagger-output.json" with { type: "json" }; // ✅
 import authRoutes from "./src/routes/auth.routes.js";
 import jobRoutes from "./src/routes/job.routes.js";
 
@@ -14,6 +16,7 @@ connectDB();
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/jobs", jobRoutes);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerFile));
 
 app.get("/", (req, res) => {
   res.send("Job Portal API is running!");
