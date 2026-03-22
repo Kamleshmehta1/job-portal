@@ -1,10 +1,10 @@
 import dotenv from "dotenv";
 import express from "express";
 import swaggerUi from "swagger-ui-express";
-import connectDB from "./src/config/db.js";
-import swaggerFile from "./src/config/swagger-output.json" with { type: "json" }; // ✅
-import authRoutes from "./src/routes/auth.routes.js";
-import jobRoutes from "./src/routes/job.routes.js";
+import connectDB from "./config/db.js";
+import authRoutes from "./routes/auth.routes.js";
+import jobRoutes from "./routes/job.routes.js";
+import swaggerFile from "./swagger-output.json" with { type: "json" };
 
 dotenv.config();
 

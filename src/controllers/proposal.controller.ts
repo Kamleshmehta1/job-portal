@@ -1,15 +1,8 @@
 import { type Request, type Response } from "express";
 import Job from "../models/Job.js";
 import Proposal from "../models/Proposal.js";
-import type {
-  CreateProposalBody,
-  JobIdParams,
-} from "../types/proposal.types.js";
 
-export const createProposal = async (
-  req: Request<JobIdParams, {}, CreateProposalBody>,
-  res: Response,
-) => {
+export const createProposal = async (req: Request, res: Response) => {
   try {
     const { coverLetter, bidAmount, deliveryDays } = req.body;
     const jobId = req.params.jobId;
@@ -30,7 +23,7 @@ export const createProposal = async (
     }
 
     const proposal = await Proposal.create({
-      job: jobId,
+      job: jobId as string,
       freelancer: req.user!._id,
       coverLetter,
       bidAmount,
@@ -57,10 +50,7 @@ export const createProposal = async (
   }
 };
 
-export const getJobProposals = async (
-  req: Request<JobIdParams>,
-  res: Response,
-) => {
+export const getJobProposals = async (req: Request, res: Response) => {
   try {
     const job = await Job.findById(req.params.jobId);
 
@@ -79,7 +69,7 @@ export const getJobProposals = async (
     }
 
     const proposals = await Proposal.find({
-      job: req.params.jobId,
+      job: req.params.jobId as string,
     }).populate("freelancer", "name email");
 
     res.status(200).json({

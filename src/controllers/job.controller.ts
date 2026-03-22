@@ -76,7 +76,7 @@ export const getAllJobs = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteJob = async (req: Request<JobParams>, res: Response) => {
+export const deleteJob = async (req: Request, res: Response) => {
   try {
     const job = await Job.findById(req.params.id);
 

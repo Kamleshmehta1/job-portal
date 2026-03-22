@@ -10,13 +10,14 @@ const doc = {
   securityDefinitions: {
     bearerAuth: {
       type: "apiKey",
-      in: "header",
       name: "Authorization",
+      in: "header",
     },
   },
+  security: [{ bearerAuth: [] }],
 };
 
-const outputFile = "./src/config/swagger-output.json";
-const routes = ["./server.js"];
+const outputFile = "./swagger-output.json";
+const routes = ["./server.ts"];
 
 swaggerAutogen()(outputFile, routes, doc);
