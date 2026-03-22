@@ -1,26 +1,23 @@
-import { type Request, type Response } from "express";
+import { type NextFunction, type Request, type Response } from "express";
 import Job from "../models/Job.js";
 import Proposal from "../models/Proposal.js";
+import { ApiError } from "../utils/ApiError.js";
 
-export const createProposal = async (req: Request, res: Response) => {
+export const createProposal = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { coverLetter, bidAmount, deliveryDays } = req.body;
     const jobId = req.params.jobId;
 
     const job = await Job.findById(jobId);
-    if (!job) {
-      return res.status(404).json({
-        success: false,
-        message: "Job not found",
-      });
-    }
 
-    if (job.status !== "open") {
-      return res.status(400).json({
-        success: false,
-        message: "Job is not open for proposals",
-      });
-    }
+    if (!job) throw new ApiError(404, "Job not found");
+
+    if (job.status !== "open")
+      throw new ApiError(400, "Job is not open for proposals");
 
     const proposal = await Proposal.create({
       job: jobId as string,
@@ -37,35 +34,24 @@ export const createProposal = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     if (error.code === 11000) {
-      return res.status(400).json({
-        success: false,
-        message: "You have already applied for this job",
-      });
+      return next(new ApiError(400, "You have already applied for this job"));
     }
-
-    res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    next(error);
   }
 };
 
-export const getJobProposals = async (req: Request, res: Response) => {
+export const getJobProposals = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const job = await Job.findById(req.params.jobId);
 
-    if (!job) {
-      return res.status(404).json({
-        success: false,
-        message: "Job not found",
-      });
-    }
+    if (!job) throw new ApiError(404, "Job not found");
 
     if (job.client.toString() !== req.user!._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: "Not authorized",
-      });
+      throw new ApiError(403, "Not authorized");
     }
 
     const proposals = await Proposal.find({
@@ -77,10 +63,7 @@ export const getJobProposals = async (req: Request, res: Response) => {
       count: proposals.length,
       data: proposals,
     });
-  } catch (error: any) {
-    res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+  } catch (error) {
+    next(error);
   }
 };
