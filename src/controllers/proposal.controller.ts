@@ -1,6 +1,7 @@
 import { type NextFunction, type Request, type Response } from "express";
 import Job from "../models/Job.js";
 import Proposal from "../models/Proposal.js";
+import type { MongoError } from "../types/mongo.types.js";
 import { ApiError } from "../utils/ApiError.js";
 
 export const createProposal = async (
@@ -32,8 +33,9 @@ export const createProposal = async (
       message: "Proposal submitted successfully",
       data: proposal,
     });
-  } catch (error: any) {
-    if (error.code === 11000) {
+  } catch (error) {
+    const mongoError = error as MongoError;
+    if (mongoError.code === 11000) {
       return next(new ApiError(400, "You have already applied for this job"));
     }
     next(error);
