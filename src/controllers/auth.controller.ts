@@ -3,11 +3,10 @@ import { type NextFunction, type Request, type Response } from "express";
 import jwt from "jsonwebtoken";
 import type { StringValue } from "ms";
 import User from "../models/User.js";
-import type { LoginBody, RegisterBody } from "../types/auth.types.js";
 import { ApiError } from "../utils/ApiError.js";
 
 export const register = async (
-  req: Request<{}, {}, RegisterBody>,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
@@ -26,7 +25,7 @@ export const register = async (
 };
 
 export const login = async (
-  req: Request<{}, {}, LoginBody>,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {

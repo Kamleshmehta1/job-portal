@@ -3,11 +3,12 @@ import { ApiError } from "../utils/ApiError.js";
 
 export const errorHandler = (
   err: ApiError,
-  req: Request,
+  _req: Request,
   res: Response,
-  next: NextFunction,
+  _next: NextFunction,
 ) => {
   const statusCode = err.statusCode || 500;
+
   res.status(statusCode).json({
     success: false,
     error: err.message || "Internal Server Error",

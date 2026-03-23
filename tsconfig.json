@@ -43,5 +43,5 @@
     "outDir": "./dist",
     "rootDir": "./src"
   },
-  "exclude": ["eslint.config.ts", "swagger.ts", "node_modules"]
+  "exclude": ["eslint.config.ts", "src/swagger.ts", "node_modules", "dist"]
 }

@@ -1,10 +1,9 @@
 import { type NextFunction, type Request, type Response } from "express";
 import Job from "../models/Job.js";
-import type { CreateJobBody, JobParams } from "../types/job.types.js";
 import { ApiError } from "../utils/ApiError.js";
 
 export const createJob = async (
-  req: Request<{}, {}, CreateJobBody>,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
@@ -31,7 +30,7 @@ export const createJob = async (
 };
 
 export const getJob = async (
-  req: Request<JobParams>,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
@@ -91,6 +90,35 @@ export const deleteJob = async (
     res.status(200).json({
       success: true,
       message: "Job deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateJob = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const job = await Job.findById(req.params.id);
+
+    if (!job) throw new ApiError(404, "Job not found");
+
+    if (job.client.toString() !== req.user!._id.toString()) {
+      throw new ApiError(403, "Not authorized to update this job");
+    }
+
+    const updatedJob = await Job.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Job updated successfully",
+      data: updatedJob,
     });
   } catch (error) {
     next(error);
