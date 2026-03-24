@@ -19,9 +19,32 @@ router.use(
 );
 
 router.get("/", getAllJobs);
+
 router.get("/:id", getJob);
+
 router.post("/", protect, authorize("client"), createJob);
+
 router.delete("/:id", protect, authorize("client"), deleteJob);
-router.patch("/:id", protect, authorize("client"), updateJob);
+
+router.patch(
+  "/:id",
+  // #swagger.parameters['body'] = {
+  //   in: 'body',
+  //   required: true,
+  //   schema: {
+  //     type: 'object',
+  //     properties: {
+  //       title: { type: 'string', example: 'Updated job title' },
+  //       description: { type: 'string', example: 'Updated description' },
+  //       skillsRequired: { type: 'array', items: { type: 'string' } },
+  //       budget: { type: 'number', example: 5000 },
+  //       deadline: { type: 'string', example: '2026-04-01' }
+  //     }
+  //   }
+  // }
+  protect,
+  authorize("client"),
+  updateJob,
+);
 
 export default router;

@@ -57,12 +57,27 @@ export const getAllJobs = async (
   next: NextFunction,
 ) => {
   try {
-    const jobs = await Job.find({ status: "open" })
+    const { page = 1, limit = 10, skills, status = "open" } = req.query;
+
+    const filter: Record<string, unknown> = { status };
+
+    if (skills) {
+      filter.skillsRequired = { $in: (skills as string).split(",") };
+    }
+
+    const total = await Job.countDocuments(filter);
+
+    const jobs = await Job.find(filter)
       .populate("client", "name email")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip((Number(page) - 1) * Number(limit))
+      .limit(Number(limit));
 
     res.status(200).json({
       success: true,
+      total,
+      page: Number(page),
+      pages: Math.ceil(total / Number(limit)),
       count: jobs.length,
       data: jobs,
     });

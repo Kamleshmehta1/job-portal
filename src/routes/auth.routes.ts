@@ -6,6 +6,8 @@ const router = express.Router();
 
 router.post("/register", register);
 router.post("/login", login);
+
+// #swagger.security = [{ "bearerAuth": [] }]
 router.get("/me", protect, getMe);
 
 export default router;
