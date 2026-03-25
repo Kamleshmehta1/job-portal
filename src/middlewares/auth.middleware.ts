@@ -1,6 +1,7 @@
 import { type NextFunction, type Request, type Response } from "express";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import { ApiError } from "../utils/ApiError.js";
 
 export const protect = async (
   req: Request,
@@ -14,12 +15,7 @@ export const protect = async (
       token = req.headers.authorization.split(" ")[1];
     }
 
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: "Not authorized, no token",
-      });
-    }
+    if (!token) throw new ApiError(401, "Not authorized, no token");
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
       id: string;
@@ -27,12 +23,7 @@ export const protect = async (
 
     const user = await User.findById(decoded.id).select("-password");
 
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "User not found",
-      });
-    }
+    if (!user) throw new ApiError(401, "User not found");
 
     req.user = {
       _id: user._id,
@@ -43,30 +34,20 @@ export const protect = async (
 
     next();
   } catch (error) {
-    res.status(401).json({
-      success: false,
-      message: "Not authorized, token failed",
-    });
+    next(error);
   }
 };
 
 export const authorize = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    try {
-      if (!req.user || !roles.includes(req.user.role)) {
-        return res.status(403).json({
-          success: false,
-          message:
-            "Access denied. You do not have permission to perform this action.",
-        });
-      }
-
-      next();
-    } catch (error) {
-      res.status(403).json({
-        success: false,
-        message: "Authorization failed",
-      });
+    if (!req.user || !roles.includes(req.user.role)) {
+      return next(
+        new ApiError(
+          403,
+          "Access denied. You do not have permission to perform this action.",
+        ),
+      );
     }
+    next();
   };
 };

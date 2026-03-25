@@ -69,3 +69,38 @@ export const getJobProposals = async (
     next(error);
   }
 };
+
+export const updateProposalStatus = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { status } = req.body;
+    const proposalId = req.params.proposalId;
+
+    const job = await Job.findById(req.params.jobId);
+    if (!job) throw new ApiError(404, "Job not found");
+
+    if (job.client.toString() !== req.user!._id.toString()) {
+      throw new ApiError(403, "Not authorized");
+    }
+
+    const proposal = await Proposal.findById(proposalId);
+    if (!proposal) throw new ApiError(404, "Proposal not found");
+
+    if (proposal.job.toString() !== req.params.jobId) {
+      throw new ApiError(400, "Proposal does not belong to this job");
+    }
+
+    proposal.status = status;
+    await proposal.save();
+    res.status(200).json({
+      success: true,
+      message: "Proposal status updated successfully",
+      data: proposal,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

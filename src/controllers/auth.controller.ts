@@ -1,9 +1,12 @@
 import bcrypt from "bcryptjs";
 import { type NextFunction, type Request, type Response } from "express";
-import jwt from "jsonwebtoken";
-import type { StringValue } from "ms";
 import User from "../models/User.js";
 import { ApiError } from "../utils/ApiError.js";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  verifyRefreshToken,
+} from "../utils/token.utils.js";
 
 export const register = async (
   req: Request,
@@ -41,17 +44,75 @@ export const login = async (
 
     if (!isPasswordCorrect) throw new ApiError(401, "Invalid credentials");
 
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET as string,
-      { expiresIn: process.env.JWT_EXPIRES_IN as StringValue },
-    );
+    const accessToken = generateAccessToken(user._id.toString(), user.role);
+    const refreshToken = generateRefreshToken(user._id.toString());
+
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
 
     res.status(200).json({
       success: true,
       message: "Login successful",
-      token,
+      accessToken,
+      refreshToken,
       data: user,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const refreshToken = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) throw new ApiError(400, "Refresh token is required");
+
+    const decoded = verifyRefreshToken(refreshToken);
+
+    const user = await User.findById(decoded.id);
+
+    if (!user || user.refreshToken !== refreshToken)
+      throw new ApiError(401, "Invalid refresh token");
+
+    const newAccessToken = generateAccessToken(user._id.toString(), user.role);
+
+    res.status(200).json({
+      success: true,
+      accessToken: newAccessToken,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const logOut = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) throw new ApiError(400, "Refresh token is required");
+
+    const decoded = verifyRefreshToken(refreshToken);
+
+    const user = await User.findById(decoded.id);
+
+    if (!user || user.refreshToken !== refreshToken)
+      throw new ApiError(401, "Invalid refresh token");
+
+    user.refreshToken = null;
+    await user.save({ validateBeforeSave: false });
+
+    res.status(200).json({
+      success: true,
+      message: "Logged out successfully",
     });
   } catch (error) {
     next(error);

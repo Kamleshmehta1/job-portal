@@ -6,6 +6,7 @@ export interface UserDocument extends Document {
   email: string;
   password: string;
   role: "client" | "freelancer";
+  refreshToken: string | null;
   createdAt: Date;
   updatedAt: Date;
 
@@ -35,6 +36,10 @@ const userSchema = new Schema<UserDocument>(
       type: String,
       enum: ["client", "freelancer"],
       default: "freelancer",
+    },
+    refreshToken: {
+      type: String,
+      default: null,
     },
   },
   { timestamps: true },
